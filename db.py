@@ -10,7 +10,10 @@ user INTEGER,
 xp INTEGER,
 level INTEGER,
 coins INTEGER,
-PRIMARY KEY(guild,user)
+PRIMARY KEY(guild,user),
+guild INTEGER,
+user INTEGER,
+item TEXT
 )
 """)
 
