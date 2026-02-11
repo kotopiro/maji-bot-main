@@ -1,20 +1,25 @@
+import os
 import discord
 from discord.ext import commands
 from flask import Flask
 from threading import Thread
-import os
 
 # =========================
-# keep alive web server
+# Koyeb keep-alive web
 # =========================
+
 app = Flask(__name__)
 
 @app.route("/")
 def home():
     return "bot alive"
 
+@app.route("/health")
+def health():
+    return "ok"
+
 def run_web():
-    port = int(os.getenv("PORT", 8000))
+    port = int(os.environ.get("PORT", 8000))
     app.run(host="0.0.0.0", port=port)
 
 def keep_alive():
@@ -22,8 +27,9 @@ def keep_alive():
     t.start()
 
 # =========================
-# discord bot
+# Discord Bot
 # =========================
+
 intents = discord.Intents.all()
 
 class Bot(commands.Bot):
@@ -41,31 +47,42 @@ class Bot(commands.Bot):
                 if file.endswith(".py"):
                     try:
                         await self.load_extension(f"cogs.{file[:-3]}")
-                        print(f"Loaded cog: {file}")
+                        print(f"[COG] Loaded: {file}")
                     except Exception as e:
-                        print(f"Cog load error {file}: {e}")
+                        print(f"[COG ERROR] {file}: {e}")
 
         # スラッシュコマンド同期
         await self.tree.sync()
-        print("Slash commands synced")
+        print("[SYNC] Slash commands synced")
+
 
 bot = Bot()
+
+# =========================
+# Events
+# =========================
+
+@bot.event
+async def on_connect():
+    print("Discord 接続完了")
 
 @bot.event
 async def on_ready():
     print(f"起動: {bot.user}")
 
     await bot.change_presence(
-        status=discord.Status.online,   # ← オンライン
+        status=discord.Status.online,
         activity=discord.Game("/help | school-rekisi.kesug.com")
     )
+
 # =========================
-# start
+# Start
 # =========================
+
 keep_alive()
 
 TOKEN = os.getenv("TOKEN")
 if not TOKEN:
-    raise RuntimeError("TOKEN が設定されていません")
+    raise RuntimeError("TOKEN が設定されていません（Koyebの環境変数）")
 
 bot.run(TOKEN)
