@@ -54,10 +54,11 @@ bot = Bot()
 @bot.event
 async def on_ready():
     print(f"起動: {bot.user}")
+
     await bot.change_presence(
+        status=discord.Status.online,   # ← オンライン
         activity=discord.Game("/help | school-rekisi.kesug.com")
     )
-
 # =========================
 # start
 # =========================
