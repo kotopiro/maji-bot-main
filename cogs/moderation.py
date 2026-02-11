@@ -45,33 +45,7 @@ class Mod(commands.Cog):
         await member.timeout(until)
         await i.response.send_message(f"⏱️ {minutes}分タイムアウトしました")
 
-    # =====================
-    # 🔒 LOCK
-    # =====================
-    @app_commands.command(
-        name="lock",
-        description="このチャンネルをロックします"
-    )
-    @app_commands.checks.has_permissions(manage_channels=True)
-    async def lock(self, i: discord.Interaction):
-        ow = i.channel.overwrites_for(i.guild.default_role)
-        ow.send_messages = False
-        await i.channel.set_permissions(i.guild.default_role, overwrite=ow)
-        await i.response.send_message("🔒 ロックしました")
 
-    # =====================
-    # 🔓 UNLOCK
-    # =====================
-    @app_commands.command(
-        name="unlock",
-        description="このチャンネルをアンロックします"
-    )
-    @app_commands.checks.has_permissions(manage_channels=True)
-    async def unlock(self, i: discord.Interaction):
-        ow = i.channel.overwrites_for(i.guild.default_role)
-        ow.send_messages = True
-        await i.channel.set_permissions(i.guild.default_role, overwrite=ow)
-        await i.response.send_message("🔓 アンロックしました")
 
     # =====================
     # 🧹 PURGE
