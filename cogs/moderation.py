@@ -86,27 +86,25 @@ class Mod(commands.Cog):
         deleted = await i.channel.purge(limit=amount)
         await i.followup.send(f"🧹 {len(deleted)}件削除しました")
 
-    # =====================
-    # ✅ VERIFY（計算認証）
-    # =====================
-    @app_commands.command(
-        name="verify",
-        description="計算認証ボタンを設置します"
-    )
-    async def verify(self, i: discord.Interaction, role: discord.Role):
-        a = random.randint(1, 9)
-        b = random.randint(1, 9)
-        view = VerifyView(role, a + b)
-
-        await i.response.send_message(
-            f"認証してください: {a} + {b} = ?",
-            view=view
-        )
-
-
-# =====================
+  # =====================
 # 認証UI
 # =====================
+
+class VerifyModal(discord.ui.Modal, title="計算認証"):
+    ans = discord.ui.TextInput(label="答え")
+
+    def __init__(self, role, answer):
+        super().__init__()
+        self.role = role
+        self.answer = answer
+
+    async def on_submit(self, i: discord.Interaction):
+        if self.ans.value.isdigit() and int(self.ans.value) == self.answer:
+            await i.user.add_roles(self.role)
+            await i.response.send_message("✅ 認証成功", ephemeral=True)
+        else:
+            await i.response.send_message("❌ 不正解", ephemeral=True)
+
 
 class VerifyView(discord.ui.View):
     def __init__(self, role, answer):
@@ -116,23 +114,38 @@ class VerifyView(discord.ui.View):
 
     @discord.ui.button(label="答える", style=discord.ButtonStyle.green)
     async def btn(self, i: discord.Interaction, b: discord.ui.Button):
-        await i.response.send_modal(VerifyModal(self.role, self.answer))
+        await i.response.send_modal(
+            VerifyModal(self.role, self.answer)
+        )
 
 
-class VerifyModal(discord.ui.Modal, title="計算認証"):
-    def __init__(self, role, answer):
-        super().__init__()
-        self.role = role
-        self.answer = answer
+# =====================
+# Mod Cog
+# =====================
 
-    ans = discord.ui.TextInput(label="答え")
+class Mod(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
 
-    async def on_submit(self, i: discord.Interaction):
-        if self.ans.value.isdigit() and int(self.ans.value) == self.answer:
-            await i.user.add_roles(self.role)
-            await i.response.send_message("✅ 認証成功", ephemeral=True)
-        else:
-            await i.response.send_message("❌ 不正解", ephemeral=True)
+    # ---------- VERIFY ----------
+    @app_commands.command(
+        name="verify",
+        description="計算認証ボタンを設置します"
+    )
+    @app_commands.checks.has_permissions(manage_roles=True)
+    async def verify(self, i: discord.Interaction, role: discord.Role):
+
+        await i.response.defer()  # ← interaction timeout防止
+
+        a = random.randint(1, 9)
+        b = random.randint(1, 9)
+
+        view = VerifyView(role, a + b)
+
+        await i.followup.send(
+            f"認証してください: {a} + {b} = ?",
+            view=view
+        )
 
 
 async def setup(bot):
