@@ -86,65 +86,6 @@ class Mod(commands.Cog):
         deleted = await i.channel.purge(limit=amount)
         await i.followup.send(f"🧹 {len(deleted)}件削除しました")
 
-# =====================
-# Verify Modal
-# =====================
-class VerifyModal(discord.ui.Modal, title="計算認証"):
-    ans = discord.ui.TextInput(label="答え")
-
-    def __init__(self, role, answer):
-        super().__init__()
-        self.role = role
-        self.answer = answer
-
-    async def on_submit(self, i: discord.Interaction):
-        # 入力が数字かつ正解か判定
-        if self.ans.value.isdigit() and int(self.ans.value) == self.answer:
-            await i.user.add_roles(self.role)
-            await i.response.send_message("✅ 認証成功！ロールを付与しました", ephemeral=True)
-        else:
-            await i.response.send_message("❌ 不正解です", ephemeral=True)
-
-
-# =====================
-# Verify Button View
-# =====================
-class VerifyView(discord.ui.View):
-    def __init__(self, role):
-        super().__init__(timeout=None)  # 永続ボタン
-        self.role = role
-
-    @discord.ui.button(label="認証する", style=discord.ButtonStyle.green)
-    async def btn(self, i: discord.Interaction, b: discord.ui.Button):
-        # ボタン押すたびにランダム問題生成
-        a = random.randint(1, 9)
-        b_num = random.randint(1, 9)
-        answer = a + b_num
-
-        await i.response.send_modal(VerifyModal(self.role, answer))
-
-
-# =====================
-# Mod Cog
-# =====================
-class Mod(commands.Cog):
-    def __init__(self, bot):
-        self.bot = bot
-
-    # ---------- VERIFY ----------
-    @app_commands.command(
-        name="verify",
-        description="計算認証ボタンを設置します"
-    )
-    @app_commands.checks.has_permissions(manage_roles=True)
-    async def verify(self, i: discord.Interaction, role: discord.Role):
-        """ボタンを設置するだけ。問題はボタン押してから生成"""
-        view = VerifyView(role)
-        await i.response.send_message(
-            "以下のボタンを押して認証してください",
-            view=view
-        )
-
 
 
 async def setup(bot):
