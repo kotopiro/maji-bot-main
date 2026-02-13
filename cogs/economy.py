@@ -39,37 +39,40 @@ class Eco(commands.Cog):
 
     # ===== ギャンブル =====
 
-    @app_commands.command(
-        name="gamble",
-        description="コインを賭けて勝負します（50%）"
+@app_commands.command(
+    name="gamble",
+    description="コインを賭けて勝負します"
+)
+@app_commands.describe(
+    amount="賭けるコイン数"
+)
+async def gamble(self, interaction: discord.Interaction, amount: int):
+
+    if amount <= 0:
+        await interaction.response.send_message("❌ 正の数を指定")
+        return
+
+    xp, lv, coins = get_user(interaction.guild.id, interaction.user.id)
+
+    if amount > coins:
+        await interaction.response.send_message("❌ コイン不足")
+        return
+
+    # ⭐ここ重要（確変対応）
+    chance = getattr(self.bot, "gamble_chance", 0.5)
+
+    if random.random() < chance:
+        coins += amount
+        msg = f"🎉 勝ち！ +{amount}"
+    else:
+        coins -= amount
+        msg = f"💸 負け… -{amount}"
+
+    update_user(interaction.guild.id, interaction.user.id, coins=coins)
+
+    await interaction.response.send_message(
+        f"{msg}\n現在残高: {coins}"
     )
-    @app_commands.describe(
-        amount="賭けるコイン数"
-    )
-    async def gamble(self, interaction: discord.Interaction, amount: int):
-
-        if amount <= 0:
-            await interaction.response.send_message("❌ 正の数を指定")
-            return
-
-        xp, lv, coins = get_user(interaction.guild.id, interaction.user.id)
-
-        if amount > coins:
-            await interaction.response.send_message("❌ コイン不足")
-            return
-
-        if random.random() < 0.5:
-            coins += amount
-            msg = f"🎉 勝ち！ +{amount}"
-        else:
-            coins -= amount
-            msg = f"💸 負け… -{amount}"
-
-        update_user(interaction.guild.id, interaction.user.id, coins=coins)
-
-        await interaction.response.send_message(
-            f"{msg}\n現在残高: {coins}"
-        )
 
 async def setup(bot):
     await bot.add_cog(Eco(bot))
